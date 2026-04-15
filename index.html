@@ -85,7 +85,8 @@
 
     #page3,
     #page4,
-    #page5 {
+    #page5,
+    #page7 {
       transform: none;
       opacity: 0;
       visibility: hidden;
@@ -105,9 +106,14 @@
       z-index: 50;
     }
 
+    #page7 {
+      z-index: 60;
+    }
+
     #page3.show,
     #page4.show,
-    #page5.show {
+    #page5.show,
+    #page7.show {
       opacity: 1;
       visibility: visible;
       pointer-events: auto;
@@ -264,6 +270,204 @@
       transform: translateX(-50%) scale(0.97);
     }
 
+    .p7-primary-btn,
+    .p7-secondary-btn {
+      position: absolute;
+      bottom: 7%;
+      width: 38vw;
+      z-index: 4;
+      transition: opacity 0.2s ease, transform 0.15s ease;
+    }
+
+    .p7-primary-btn {
+      left: 50%;
+      transform: translateX(-50%);
+    }
+
+    .p7-secondary-btn {
+      left: 8%;
+    }
+
+    .p7-two-buttons .p7-primary-btn {
+      left: auto;
+      right: 8%;
+      transform: none;
+    }
+
+    .p7-two-buttons .p7-secondary-btn {
+      display: block;
+    }
+
+    .p7-single-button .p7-secondary-btn {
+      display: none;
+    }
+
+    .p7-single-button .p7-primary-btn {
+      left: 50%;
+      right: auto;
+      transform: translateX(-50%);
+    }
+
+    .p7-primary-btn:active,
+    .p7-secondary-btn:active {
+      opacity: 0.86;
+      transform: translateX(-50%) scale(0.97);
+    }
+
+    .p7-two-buttons .p7-primary-btn:active {
+      transform: scale(0.97);
+    }
+
+    .p7-two-buttons .p7-secondary-btn:active {
+      transform: scale(0.97);
+    }
+
+    .p7-address-mask,
+    .p8-share-mask {
+      position: absolute;
+      inset: 0;
+      z-index: 80;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 4vw;
+      background: rgba(8, 6, 4, 0.78);
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+      transition: opacity 0.25s ease;
+    }
+
+    .p7-address-mask.show,
+    .p8-share-mask.show {
+      opacity: 1;
+      visibility: visible;
+      pointer-events: auto;
+    }
+
+    .p7-address-card {
+      position: relative;
+      width: 96vw;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .p7-address-image {
+      width: 100%;
+      height: auto;
+    }
+
+    .p7-address-close {
+      position: absolute;
+      top: 19%;
+      right: 7%;
+      width: 8vw;
+      z-index: 3;
+    }
+
+    .p7-form {
+      position: absolute;
+      top: 34.5%;
+      left: 18%;
+      width: 64%;
+      z-index: 4;
+      display: flex;
+      flex-direction: column;
+      gap: 2.8vw;
+    }
+
+    .p7-input,
+    .p7-textarea {
+      width: 100%;
+      border: none;
+      outline: none;
+      background: transparent;
+      color: #9c6330;
+      font-size: 3.8vw;
+      line-height: 1.4;
+      font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Helvetica Neue", sans-serif;
+    }
+
+    .p7-input {
+      height: 7.4vw;
+      padding-left: 37%;
+      padding-right: 2%;
+    }
+
+    .p7-textarea {
+      min-height: 17vw;
+      resize: none;
+      padding-top: 1.5%;
+      padding-left: 24%;
+      padding-right: 2%;
+      text-indent: 25%;
+    }
+
+    .p7-input::placeholder,
+    .p7-textarea::placeholder {
+      color: transparent;
+    }
+
+    .p7-confirm-btn {
+      position: absolute;
+      left: 50%;
+      bottom: 18%;
+      width: 34vw;
+      transform: translateX(-50%);
+      z-index: 4;
+      opacity: 0.52;
+      pointer-events: none;
+    }
+
+    .p7-confirm-btn.enabled {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .p7-address-close:active {
+      opacity: 0.86;
+      transform: scale(0.95);
+    }
+
+    .p7-confirm-btn.enabled:active {
+      opacity: 0.86;
+      transform: translateX(-50%) scale(0.97);
+    }
+
+    .p8-share-content {
+      position: relative;
+      width: 92vw;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.6vw;
+    }
+
+    .p8-poster {
+      width: 100%;
+      height: auto;
+      border-radius: 2vw;
+    }
+
+    .p8-save-text {
+      width: 23%;
+      height: auto;
+    }
+
+    .p8-close {
+      position: absolute;
+      top: 4%;
+      right: 2%;
+      width: 8vw;
+      z-index: 5;
+    }
+
+    .p8-close:active {
+      opacity: 0.86;
+      transform: scale(0.95);
+    }
+
     .p5-input-wrap {
       position: absolute;
       top: 31%;
@@ -350,7 +554,7 @@
       left: calc(env(safe-area-inset-left) + 3.5vw);
       width: 9vw;
       height: 9vw;
-      z-index: 40;
+      z-index: 90;
       opacity: 0;
       pointer-events: none;
       transition: opacity 0.25s ease;
@@ -555,12 +759,12 @@
 </head>
 <body data-next-url="">
   <div class="app">
+    <button id="musicBtn" class="music-btn" type="button" aria-label="背景音乐开关">
+      <img id="musicIcon" src="./assets/music_Close.png" alt="音乐状态">
+    </button>
+
     <section id="page2" class="layer" aria-label="答题页">
       <img class="layer-bg" src="./assets/p2/backgroundimage.png" alt="答题背景">
-
-      <button id="musicBtn" class="music-btn" type="button" aria-label="背景音乐开关">
-        <img id="musicIcon" src="./assets/music_Close.png" alt="音乐状态">
-      </button>
 
       <div class="quiz-panel">
         <div class="quiz-scroll" id="quizContainer"></div>
@@ -636,6 +840,43 @@
       </div>
     </section>
 
+    <section id="page7" class="layer p7-single-button" aria-label="抽奖结果页">
+      <img id="p7ResultBg" class="layer-bg" src="./assets/p7/Awarddetailspage.png" alt="抽奖结果">
+      <button id="p7SecondaryBtn" class="p7-secondary-btn" type="button" aria-label="次要操作">
+        <img id="p7SecondaryBtnImg" src="./assets/p7/one_more_draw.png" alt="次要操作">
+      </button>
+      <button id="p7PrimaryBtn" class="p7-primary-btn" type="button" aria-label="主要操作">
+        <img id="p7PrimaryBtnImg" src="./assets/p7/address.png" alt="主要操作">
+      </button>
+
+      <div id="p7AddressMask" class="p7-address-mask" aria-hidden="true">
+        <div class="p7-address-card">
+          <img class="p7-address-image" src="./assets/p7/Addresspage.png" alt="填写收件地址">
+          <button id="p7AddressClose" class="p7-address-close" type="button" aria-label="关闭地址弹窗">
+            <img src="./assets/p6/close.png" alt="关闭">
+          </button>
+          <div class="p7-form">
+            <input id="recipientInput" class="p7-input" type="text" maxlength="20" placeholder="请输入收件人">
+            <input id="phoneInput" class="p7-input" type="tel" inputmode="numeric" maxlength="11" placeholder="请输入手机号">
+            <textarea id="addressInput" class="p7-textarea" maxlength="80" placeholder="请输入详细地址"></textarea>
+          </div>
+          <button id="p7ConfirmBtn" class="p7-confirm-btn" type="button" aria-label="确认地址">
+            <img src="./assets/p7/confirm.png" alt="确认">
+          </button>
+        </div>
+      </div>
+
+      <div id="p8ShareMask" class="p8-share-mask" aria-hidden="true">
+        <div class="p8-share-content">
+          <button id="p8CloseBtn" class="p8-close" type="button" aria-label="关闭分享海报">
+            <img src="./assets/p8/close.png" alt="关闭">
+          </button>
+          <img class="p8-poster" src="./assets/p8/poster.png" alt="分享海报">
+          <img class="p8-save-text" src="./assets/p8/Save_poster_text.png" alt="长按保存海报">
+        </div>
+      </div>
+    </section>
+
     <section id="page1" class="layer" aria-label="封面页">
       <img class="layer-bg" src="./assets/p1/backgroundimage.png" alt="封面背景">
       <button id="unlockBtn" class="unlock-btn" type="button" aria-label="进入答题页">
@@ -650,6 +891,7 @@
   <script>
     (() => {
       const STORAGE_KEY = "readingweek_music_enabled";
+      const DRAW_STORAGE_KEY = "readingweek_draw_state";
       const NEXT_PAGE_URL = document.body.dataset.nextUrl || "";
       const SWIPE_THRESHOLD = 60;
       const P3_SET_COUNT = 5;
@@ -732,6 +974,20 @@
       const p6LotteryMask = document.getElementById("p6LotteryMask");
       const p6CloseBtn = document.getElementById("p6CloseBtn");
       const p6LotteryBtn = document.getElementById("p6LotteryBtn");
+      const page7 = document.getElementById("page7");
+      const p7ResultBg = document.getElementById("p7ResultBg");
+      const p7PrimaryBtn = document.getElementById("p7PrimaryBtn");
+      const p7PrimaryBtnImg = document.getElementById("p7PrimaryBtnImg");
+      const p7SecondaryBtn = document.getElementById("p7SecondaryBtn");
+      const p7SecondaryBtnImg = document.getElementById("p7SecondaryBtnImg");
+      const p7AddressMask = document.getElementById("p7AddressMask");
+      const p7AddressClose = document.getElementById("p7AddressClose");
+      const recipientInput = document.getElementById("recipientInput");
+      const phoneInput = document.getElementById("phoneInput");
+      const addressInput = document.getElementById("addressInput");
+      const p7ConfirmBtn = document.getElementById("p7ConfirmBtn");
+      const p8ShareMask = document.getElementById("p8ShareMask");
+      const p8CloseBtn = document.getElementById("p8CloseBtn");
       const bgMusic = document.getElementById("bgMusic");
 
       let touchStartY = 0;
@@ -748,6 +1004,35 @@
       function storeMusicPreference(enabled) {
         try {
           localStorage.setItem(STORAGE_KEY, String(enabled));
+        } catch (error) {
+          /* ignore storage failures */
+        }
+      }
+
+      function getTodayDrawKey() {
+        const now = new Date();
+        const month = `${now.getMonth() + 1}`.padStart(2, "0");
+        const day = `${now.getDate()}`.padStart(2, "0");
+        return `${now.getFullYear()}-${month}-${day}`;
+      }
+
+      function getDrawState() {
+        const today = getTodayDrawKey();
+        try {
+          const raw = localStorage.getItem(DRAW_STORAGE_KEY);
+          const parsed = raw ? JSON.parse(raw) : null;
+          if (parsed && parsed.date === today && Number.isFinite(parsed.count)) {
+            return parsed;
+          }
+        } catch (error) {
+          /* ignore storage failures */
+        }
+        return { date: today, count: 0 };
+      }
+
+      function saveDrawState(drawState) {
+        try {
+          localStorage.setItem(DRAW_STORAGE_KEY, JSON.stringify(drawState));
         } catch (error) {
           /* ignore storage failures */
         }
@@ -779,6 +1064,12 @@
         } else {
           syncMusicIcon();
         }
+      }
+
+      function activateMusicOnEntry() {
+        state.musicEnabled = true;
+        storeMusicPreference(true);
+        tryPlayMusic();
       }
 
       function retryMusicAfterGesture() {
@@ -976,6 +1267,106 @@
         p6LotteryMask.setAttribute("aria-hidden", "true");
       }
 
+      function showP7AddressPopup() {
+        p7AddressMask.classList.add("show");
+        p7AddressMask.setAttribute("aria-hidden", "false");
+      }
+
+      function hideP7AddressPopup() {
+        p7AddressMask.classList.remove("show");
+        p7AddressMask.setAttribute("aria-hidden", "true");
+      }
+
+      function showP8SharePopup() {
+        p8ShareMask.classList.add("show");
+        p8ShareMask.setAttribute("aria-hidden", "false");
+      }
+
+      function hideP8SharePopup() {
+        p8ShareMask.classList.remove("show");
+        p8ShareMask.setAttribute("aria-hidden", "true");
+      }
+
+      function resetToStartPage() {
+        state.pageEntered = false;
+        state.popupVisible = false;
+        state.p3SelectedOption = "";
+        state.p3AnswerCorrect = false;
+        clearP3Countdown();
+        hidePopup();
+        hideP6LotteryPopup();
+        hideP7AddressPopup();
+        hideP8SharePopup();
+        page2.classList.remove("show");
+        page3.classList.remove("show");
+        page4.classList.remove("show");
+        page5.classList.remove("show");
+        page7.classList.remove("show");
+        page1.classList.remove("leave-up");
+        musicBtn.classList.remove("visible");
+        p5Textarea.value = "";
+        recipientInput.value = "";
+        phoneInput.value = "";
+        addressInput.value = "";
+        syncP5GuidingText();
+        enterP3ReadingScreen();
+      }
+
+      function showP7WinPage() {
+        page5.classList.remove("show");
+        page7.className = "layer show p7-single-button";
+        p7ResultBg.src = "./assets/p7/Awarddetailspage.png";
+        p7PrimaryBtnImg.src = "./assets/p7/address.png";
+        p7PrimaryBtn.setAttribute("aria-label", "填写地址");
+      }
+
+      function showP7LosePage(limitReached) {
+        page5.classList.remove("show");
+        if (limitReached) {
+          page7.className = "layer show p7-single-button";
+          p7ResultBg.src = "./assets/p7/Noawarddetailspage2.png";
+          p7PrimaryBtnImg.src = "./assets/p7/Sharing.png";
+          p7PrimaryBtn.setAttribute("aria-label", "分享活动");
+        } else {
+          page7.className = "layer show p7-two-buttons";
+          p7ResultBg.src = "./assets/p7/Noawarddetailspage.png";
+          p7PrimaryBtnImg.src = "./assets/p7/Sharing.png";
+          p7PrimaryBtn.setAttribute("aria-label", "分享活动");
+          p7SecondaryBtnImg.src = "./assets/p7/one_more_draw.png";
+          p7SecondaryBtn.setAttribute("aria-label", "再抽一次");
+        }
+      }
+
+      function runMockLottery() {
+        const drawState = getDrawState();
+        if (drawState.count >= 3) {
+          showP7LosePage(true);
+          return;
+        }
+
+        drawState.count += 1;
+        saveDrawState(drawState);
+
+        const isWin = Math.random() < 0.35;
+        if (isWin) {
+          showP7WinPage();
+          return;
+        }
+
+        showP7LosePage(drawState.count >= 3);
+      }
+
+      function isP7AddressValid() {
+        const recipient = recipientInput.value.trim();
+        const phone = phoneInput.value.trim();
+        const address = addressInput.value.trim();
+        return Boolean(recipient && phone && /^\d+$/.test(phone) && address);
+      }
+
+      function syncP7ConfirmButtonState() {
+        p7ConfirmBtn.classList.toggle("enabled", isP7AddressValid());
+      }
+
       function startP3ChallengeFlow() {
         state.p3SetIndex = Math.floor(Math.random() * P3_SET_COUNT) + 1;
         state.p3SelectedOption = "";
@@ -986,6 +1377,13 @@
         p5Textarea.value = "";
         syncP5GuidingText();
         hideP6LotteryPopup();
+        hideP7AddressPopup();
+        hideP8SharePopup();
+        page7.classList.remove("show");
+        recipientInput.value = "";
+        phoneInput.value = "";
+        addressInput.value = "";
+        syncP7ConfirmButtonState();
 
         const assets = getP3SetAssets(state.p3SetIndex);
         p3ReadingBg.src = assets.reading;
@@ -1066,7 +1464,7 @@
         page2.classList.add("show");
         page1.classList.add("leave-up");
         musicBtn.classList.add("visible");
-        tryPlayMusic();
+        activateMusicOnEntry();
         requestAnimationFrame(() => {
           retryMusicAfterGesture();
         });
@@ -1096,6 +1494,16 @@
           "./assets/p6/Lottery_pop-up-window.png",
           "./assets/p6/lottery.png",
           "./assets/p6/close.png",
+          "./assets/p7/Awarddetailspage.png",
+          "./assets/p7/Noawarddetailspage.png",
+          "./assets/p7/Noawarddetailspage2.png",
+          "./assets/p7/address.png",
+          "./assets/p7/one_more_draw.png",
+          "./assets/p7/Sharing.png",
+          "./assets/p7/Addresspage-notext.png",
+          "./assets/p7/confirm.png",
+          "./assets/p8/poster.png",
+          "./assets/p8/Save_poster_text.png",
           "./assets/music_open.png",
           "./assets/music_Close.png"
         ];
@@ -1121,7 +1529,10 @@
         });
       }
 
-      unlockBtn.addEventListener("click", enterPage2);
+      unlockBtn.addEventListener("click", () => {
+        activateMusicOnEntry();
+        enterPage2();
+      });
       musicBtn.addEventListener("click", toggleMusic);
       popupClose.addEventListener("click", hidePopup);
       popupMask.addEventListener("click", (event) => {
@@ -1173,6 +1584,8 @@
       p6CloseBtn.addEventListener("click", hideP6LotteryPopup);
       p6LotteryBtn.addEventListener("click", () => {
         const reflection = p5Textarea.value.trim();
+        runMockLottery();
+        hideP6LotteryPopup();
 
         window.dispatchEvent(new CustomEvent("readingweek:p5Complete", {
           detail: {
@@ -1195,6 +1608,65 @@
           reflection
         });
       });
+      p7PrimaryBtn.addEventListener("click", () => {
+        const isWinPage = p7ResultBg.src.includes("Awarddetailspage.png");
+        if (isWinPage) {
+          showP7AddressPopup();
+          return;
+        }
+        showP8SharePopup();
+      });
+      p7SecondaryBtn.addEventListener("click", resetToStartPage);
+      p7AddressClose.addEventListener("click", hideP7AddressPopup);
+      phoneInput.addEventListener("input", () => {
+        phoneInput.value = phoneInput.value.replace(/\D+/g, "");
+        syncP7ConfirmButtonState();
+      });
+      recipientInput.addEventListener("input", syncP7ConfirmButtonState);
+      addressInput.addEventListener("input", syncP7ConfirmButtonState);
+      p7AddressMask.addEventListener("click", (event) => {
+        if (event.target === p7AddressMask) {
+          hideP7AddressPopup();
+        }
+      });
+      p7ConfirmBtn.addEventListener("click", () => {
+        if (!isP7AddressValid()) {
+          return;
+        }
+
+        const recipient = recipientInput.value.trim();
+        const phone = phoneInput.value.trim();
+        const address = addressInput.value.trim();
+
+        window.dispatchEvent(new CustomEvent("readingweek:p7AddressSubmit", {
+          detail: {
+            recipient,
+            phone,
+            address,
+            setIndex: state.p3SetIndex
+          }
+        }));
+
+        hideP7AddressPopup();
+
+        if (NEXT_PAGE_URL) {
+          window.location.href = NEXT_PAGE_URL;
+          return;
+        }
+
+        console.info("P7 address submitted:", {
+          recipient,
+          phone,
+          address,
+          setIndex: state.p3SetIndex
+        });
+      });
+      p8ShareMask.addEventListener("click", (event) => {
+        if (event.target === p8ShareMask) {
+          hideP8SharePopup();
+        }
+      });
+      p8CloseBtn.addEventListener("click", hideP8SharePopup);
 
       page1.addEventListener("touchstart", (event) => {
         touchStartY = event.touches[0].clientY;
@@ -1203,12 +1675,14 @@
       page1.addEventListener("touchend", (event) => {
         const touchEndY = event.changedTouches[0].clientY;
         if (touchStartY - touchEndY > SWIPE_THRESHOLD) {
+          activateMusicOnEntry();
           enterPage2();
         }
       }, { passive: true });
 
       page1.addEventListener("wheel", (event) => {
         if (event.deltaY > 20) {
+          activateMusicOnEntry();
           enterPage2();
         }
       }, { passive: true });
@@ -1240,6 +1714,7 @@
       preloadImages();
       syncMusicIcon();
       syncP5GuidingText();
+      syncP7ConfirmButtonState();
     })();
   </script>
 </body>
