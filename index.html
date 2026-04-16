@@ -938,13 +938,25 @@
         ) || "";
       }
 
-      // 获取用户 phone，本地调试时可回退到固定测试值
-      var phone = getQueryParam("phone") // || "ee9e6ad39da4797955a1dc53f8ae584927aba9bd037404cd4f1008ae154f815ab05f75fec3ec989c47fde56001bd27aacb7c7bce8328b665c81aa76ca8c680114ee4ed504cd15e72b064c3e9bf2b74c9a5a2f3cd6ab3aaf2f9e214ef5cbb62226207c4a64a7e90ee88cb6d47e3f25490aa9548b733c4a72501133bc66537d7e16ae1b6e7798fd5cda17c8ae8b3938d9150d8c40e4a7642ed7ca9230bbfe6b50b53b278aa12c4acd86e1311e69f221f0db6c5d0297c9c501e7ca53b8c9a74056a006b0a388b487c57b3f09a0cde7115fd3a368982c5826f7367563c7c837601739db5c2e2703ad545f5873e99ea75d448b2fd1876d429683fe2b35da2b31c5326d2af13249ee2be79051dbe0962631a00e5f7b5c8714415c0ddc97d10a9c616beeff717cfd219c1e4ce1e9170e8a03e3a8ee148f63faa793462559cc32501f0b6be93aea6e9259e08700d0111e0d5daf495b21a29a31f01272edf60cbca77602e";
-      //判断用户是否登录，如果未登录，则跳转到登录页
-      var userAgent = navigator.userAgent || navigator.vendor || window.opera;   
-      var isAPP = userAgent.includes('CYOLAPP');
-      // isAPP = 1;
-      if(!isAPP){   
+      const userId = getQueryParam("user_id") || getQueryParam("userid");
+      const userName = getQueryParam("name");
+      const userAgent = navigator.userAgent || navigator.vendor || window.opera;
+      const isAPP = userAgent.includes("CYOLAPP");
+
+      function hasUserIdentity() {
+        return Boolean(userId && userName);
+      }
+
+      function triggerAppLogin() {
+        const isAndroid = userAgent.indexOf("Android") > -1 || userAgent.indexOf("Adr") > -1;
+        if (isAndroid && typeof android !== "undefined" && android && typeof android.actionLogin === "function") {
+          android.actionLogin();
+        } else {
+          window.location.href = "login://";
+        }
+      }
+
+      if(!isAPP){
           var openAppBanner = document.querySelector('.shows');
           if (openAppBanner) {
             openAppBanner.style.display = 'block';
@@ -973,34 +985,9 @@
             document.body.appendChild(mask);
           }
       } else {
-          let isAndroid = userAgent.indexOf('Android') > -1 || userAgent.indexOf('Adr') > -1;
-          var dev = isAndroid ? 'Android' :"IOS" ;
-          if(!phone || phone.length < 100) {
-              if(dev == "Android" && typeof android !== "undefined" && android && typeof android.actionLogin === "function") {
-                  android.actionLogin();
-              } else if (dev !== "Android") {
-                  window.location.href = "login://";
-              }
+          if (!hasUserIdentity()) {
+              triggerAppLogin();
           }
-      }
-      // 用 phone 向接口请求用户信息
-      var userInfo = null;
-      if (phone) {
-        $.ajax({
-          url: "https://jiuye.cyol.com/app4/u.php",
-          type: "GET",
-          data: { phone: phone },
-          dataType: "jsonp",
-          jsonp: "callback",
-          timeout: 10000,
-          success: function(data) {
-            userInfo = data;
-            console.log(userInfo); //调试
-          },
-          error: function(xhr, status, err) {
-            console.warn("用户信息 JSONP 获取失败", status || err);
-          }
-        });
       }
  
 
@@ -1008,7 +995,7 @@
 
 
       const STORAGE_KEY = "readingweek_music_enabled";
-      const DRAW_STORAGE_KEY = "readingweek_draw_state";
+      const API_BASE = "/api/readingweek";
       const NEXT_PAGE_URL = document.body.dataset.nextUrl || "";
       const SWIPE_THRESHOLD = 60;
       const P3_SET_COUNT = 5;
@@ -1060,7 +1047,12 @@
         p3ReadingSeconds: P3_READING_SECONDS,
         p3CountdownTimer: null,
         p3SelectedOption: "",
-        p3AnswerCorrect: false
+        p3AnswerCorrect: false,
+        submittingQuizAnswers: false,
+        drawing: false,
+        submittingAddress: false,
+        currentDrawId: "",
+        currentPrizeName: ""
       };
 
       const page1 = document.getElementById("page1");
@@ -1126,32 +1118,144 @@
         }
       }
 
-      function getTodayDrawKey() {
-        const now = new Date();
-        const month = `${now.getMonth() + 1}`.padStart(2, "0");
-        const day = `${now.getDate()}`.padStart(2, "0");
-        return `${now.getFullYear()}-${month}-${day}`;
+      function showMessage(message) {
+        if (!message) {
+          return;
+        }
+        window.alert(message);
       }
 
-      function getDrawState() {
-        const today = getTodayDrawKey();
+      function getUserPayload() {
+        return {
+          user_id: userId,
+          name: userName
+        };
+      }
+
+      function ensureUserIdentity() {
+        if (hasUserIdentity()) {
+          return true;
+        }
+        showMessage("未获取到用户信息，请在APP内重新打开活动");
+        if (isAPP) {
+          triggerAppLogin();
+        }
+        return false;
+      }
+
+      function postApi(path, payload) {
+        return new Promise((resolve, reject) => {
+          $.ajax({
+            url: `${API_BASE}${path}`,
+            type: "POST",
+            data: JSON.stringify(payload),
+            contentType: "application/json",
+            dataType: "json",
+            timeout: 10000,
+            success: resolve,
+            error: function(xhr, status, err) {
+              const message =
+                (xhr && xhr.responseJSON && xhr.responseJSON.message) ||
+                err ||
+                status ||
+                "请求失败";
+              reject(new Error(message));
+            }
+          });
+        });
+      }
+
+      function normalizeApiResponse(response) {
+        if (!response || response.code !== 200) {
+          throw new Error((response && response.message) || "接口返回异常");
+        }
+        return response.data || {};
+      }
+
+      function getQuizAnswersPayload() {
+        return questions.map((question) => {
+          const selected = Number(state.answers[question.id]);
+          return Number.isFinite(selected) ? selected - 1 : -1;
+        });
+      }
+
+      async function submitInitialAnswers() {
+        const answers = getQuizAnswersPayload();
+        if (answers.length !== 3 || answers.some((value) => value < 0 || value > 2)) {
+          throw new Error("请先完成前三道选择题");
+        }
+        const data = normalizeApiResponse(await postApi("/submit-answers", {
+          ...getUserPayload(),
+          answers: answers
+        }));
+        if (data.saved === false) {
+          throw new Error("题目提交失败，请稍后重试");
+        }
+      }
+
+      function showPendingPrizePage(prizeName, drawId) {
+        state.currentPrizeName = prizeName || "";
+        state.currentDrawId = drawId || "";
+        state.pageEntered = true;
+        hidePopup();
+        page1.classList.add("leave-up");
+        musicBtn.classList.add("visible");
+        page2.classList.remove("show");
+        page3.classList.remove("show");
+        page4.classList.remove("show");
+        page5.classList.remove("show");
+        showP7WinPage(prizeName);
+      }
+
+      async function checkInitialUserStatus() {
+        if (!isAPP || !hasUserIdentity()) {
+          return;
+        }
         try {
-          const raw = localStorage.getItem(DRAW_STORAGE_KEY);
-          const parsed = raw ? JSON.parse(raw) : null;
-          if (parsed && parsed.date === today && Number.isFinite(parsed.count)) {
-            return parsed;
+          const data = normalizeApiResponse(await postApi("/check-status", getUserPayload()));
+          if (data.has_pending_prize) {
+            showPendingPrizePage(data.prize_name, data.draw_id);
           }
         } catch (error) {
-          /* ignore storage failures */
+          console.warn("初始状态检查失败", error);
         }
-        return { date: today, count: 0 };
       }
 
-      function saveDrawState(drawState) {
+      async function runLottery() {
+        if (state.drawing) {
+          return false;
+        }
+        if (!ensureUserIdentity()) {
+          return false;
+        }
+        state.drawing = true;
+        p6LotteryBtn.disabled = true;
         try {
-          localStorage.setItem(DRAW_STORAGE_KEY, JSON.stringify(drawState));
+          const data = normalizeApiResponse(await postApi("/draw", getUserPayload()));
+          state.currentDrawId = "";
+          state.currentPrizeName = "";
+
+          if (data.result === "limit") {
+            showP7LosePage(true);
+            return true;
+          }
+          if (data.result === "lose") {
+            showP7LosePage(false);
+            return true;
+          }
+          if (data.result === "win") {
+            state.currentDrawId = data.draw_id || "";
+            state.currentPrizeName = data.prize_name || "";
+            showP7WinPage(state.currentPrizeName);
+            return true;
+          }
+          throw new Error("未知抽奖结果");
         } catch (error) {
-          /* ignore storage failures */
+          showMessage(error.message || "抽奖失败，请稍后重试");
+          return false;
+        } finally {
+          state.drawing = false;
+          p6LotteryBtn.disabled = false;
         }
       }
 
@@ -1429,9 +1533,11 @@
         enterP3ReadingScreen();
       }
 
-      function showP7WinPage() {
+      function showP7WinPage(prizeName) {
+        state.currentPrizeName = prizeName || state.currentPrizeName || "";
         page5.classList.remove("show");
         page7.className = "layer show p7-single-button";
+        page7.dataset.prizeName = state.currentPrizeName;
         p7ResultBg.src = "./assets/p7/Awarddetailspage.png";
         p7PrimaryBtnImg.src = "./assets/p7/address.png";
         p7PrimaryBtn.setAttribute("aria-label", "填写地址");
@@ -1454,25 +1560,6 @@
         }
       }
 
-      function runMockLottery() {
-        const drawState = getDrawState();
-        if (drawState.count >= 3) {
-          showP7LosePage(true);
-          return;
-        }
-
-        drawState.count += 1;
-        saveDrawState(drawState);
-
-        const isWin = Math.random() < 0.35;
-        if (isWin) {
-          showP7WinPage();
-          return;
-        }
-
-        showP7LosePage(drawState.count >= 3);
-      }
-
       function isP7AddressValid() {
         const recipient = recipientInput.value.trim();
         const phone = phoneInput.value.trim();
@@ -1488,6 +1575,8 @@
         state.p3SetIndex = Math.floor(Math.random() * P3_SET_COUNT) + 1;
         state.p3SelectedOption = "";
         state.p3AnswerCorrect = false;
+        state.currentDrawId = "";
+        state.currentPrizeName = "";
         syncP3SubmitButtonState();
         hidePopup();
         page5.classList.remove("show");
@@ -1587,8 +1676,24 @@
         });
       }
 
-      function handleBeginChallenge() {
-        startP3ChallengeFlow();
+      async function handleBeginChallenge() {
+        if (state.submittingQuizAnswers) {
+          return;
+        }
+        if (!ensureUserIdentity()) {
+          return;
+        }
+        state.submittingQuizAnswers = true;
+        popupEnter.disabled = true;
+        try {
+          await submitInitialAnswers();
+          startP3ChallengeFlow();
+        } catch (error) {
+          showMessage(error.message || "题目提交失败，请稍后重试");
+        } finally {
+          state.submittingQuizAnswers = false;
+          popupEnter.disabled = false;
+        }
       }
 
       function preloadImages() {
@@ -1699,9 +1804,12 @@
         showP6LotteryPopup();
       });
       p6CloseBtn.addEventListener("click", hideP6LotteryPopup);
-      p6LotteryBtn.addEventListener("click", () => {
+      p6LotteryBtn.addEventListener("click", async () => {
         const reflection = p5Textarea.value.trim();
-        runMockLottery();
+        const success = await runLottery();
+        if (!success) {
+          return;
+        }
         hideP6LotteryPopup();
 
         window.dispatchEvent(new CustomEvent("readingweek:p5Complete", {
@@ -1746,37 +1854,67 @@
           hideP7AddressPopup();
         }
       });
-      p7ConfirmBtn.addEventListener("click", () => {
+      p7ConfirmBtn.addEventListener("click", async () => {
         if (!isP7AddressValid()) {
+          return;
+        }
+        if (state.submittingAddress) {
+          return;
+        }
+        if (!ensureUserIdentity()) {
+          return;
+        }
+        if (!state.currentDrawId) {
+          showMessage("未获取到中奖记录，请重新进入中奖页面");
           return;
         }
 
         const recipient = recipientInput.value.trim();
         const phone = phoneInput.value.trim();
         const address = addressInput.value.trim();
+        state.submittingAddress = true;
+        p7ConfirmBtn.disabled = true;
+        try {
+          const data = normalizeApiResponse(await postApi("/submit-address", {
+            ...getUserPayload(),
+            draw_id: state.currentDrawId,
+            recipient: recipient,
+            mobile: phone,
+            address: address
+          }));
+          if (data.saved === false) {
+            throw new Error("地址提交失败，请稍后重试");
+          }
 
-        window.dispatchEvent(new CustomEvent("readingweek:p7AddressSubmit", {
-          detail: {
+          window.dispatchEvent(new CustomEvent("readingweek:p7AddressSubmit", {
+            detail: {
+              recipient,
+              phone,
+              address,
+              setIndex: state.p3SetIndex
+            }
+          }));
+
+          hideP7AddressPopup();
+          showMessage("地址提交成功");
+
+          if (NEXT_PAGE_URL) {
+            window.location.href = NEXT_PAGE_URL;
+            return;
+          }
+
+          console.info("P7 address submitted:", {
             recipient,
             phone,
             address,
             setIndex: state.p3SetIndex
-          }
-        }));
-
-        hideP7AddressPopup();
-
-        if (NEXT_PAGE_URL) {
-          window.location.href = NEXT_PAGE_URL;
-          return;
+          });
+        } catch (error) {
+          showMessage(error.message || "地址提交失败，请稍后重试");
+        } finally {
+          state.submittingAddress = false;
+          p7ConfirmBtn.disabled = false;
         }
-
-        console.info("P7 address submitted:", {
-          recipient,
-          phone,
-          address,
-          setIndex: state.p3SetIndex
-        });
       });
       p8ShareMask.addEventListener("click", (event) => {
         if (event.target === p8ShareMask) {
@@ -1832,6 +1970,7 @@
       syncMusicIcon();
       syncP5GuidingText();
       syncP7ConfirmButtonState();
+      checkInitialUserStatus();
 
 
     var shareTitle = '抽奖送书|全民阅读活动周·阅读挑战';
