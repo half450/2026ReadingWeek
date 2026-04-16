@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
   <meta name="apple-mobile-web-app-capable" content="yes">
-  <title>世界读书日阅读挑战</title>
+  <title>抽奖送书|全民阅读活动周·阅读挑战</title>
   <style>
     * {
       box-sizing: border-box;
@@ -891,23 +891,78 @@
   <script src="./jquery.min.js"></script>
   <script>
     (() => {
-      var phone = window.phone || "";
-      var userAgent = navigator.userAgent || navigator.vendor || window.opera;
-      var isAPP = userAgent.includes("CYOLAPP");
-      // isAPP = 1;
-      if (!isAPP) {
-        $(".shows").show();
-      } else {
-        let isAndroid = userAgent.indexOf("Android") > -1 || userAgent.indexOf("Adr") > -1;
-        var dev = isAndroid ? "Android" : "IOS";
-        if (!phone || phone.length < 100) {
-          if (dev == "Android") {
-            android.actionLogin();
-          } else {
-            window.location.href = "login://";
-          }
-        }
+      function getQueryParam(name) {
+        return decodeURIComponent(
+          (new RegExp("[?|&]" + name + "=" + "([^&;]+?)(&|#|;|$)").exec(location.href) || [, ""])[1].replace(/\+/g, "%20")
+        ) || "";
       }
+
+      // 获取用户 phone，本地调试时可回退到固定测试值
+      var phone = getQueryParam("phone") // || "ee9e6ad39da4797955a1dc53f8ae584927aba9bd037404cd4f1008ae154f815ab05f75fec3ec989c47fde56001bd27aacb7c7bce8328b665c81aa76ca8c680114ee4ed504cd15e72b064c3e9bf2b74c9a5a2f3cd6ab3aaf2f9e214ef5cbb62226207c4a64a7e90ee88cb6d47e3f25490aa9548b733c4a72501133bc66537d7e16ae1b6e7798fd5cda17c8ae8b3938d9150d8c40e4a7642ed7ca9230bbfe6b50b53b278aa12c4acd86e1311e69f221f0db6c5d0297c9c501e7ca53b8c9a74056a006b0a388b487c57b3f09a0cde7115fd3a368982c5826f7367563c7c837601739db5c2e2703ad545f5873e99ea75d448b2fd1876d429683fe2b35da2b31c5326d2af13249ee2be79051dbe0962631a00e5f7b5c8714415c0ddc97d10a9c616beeff717cfd219c1e4ce1e9170e8a03e3a8ee148f63faa793462559cc32501f0b6be93aea6e9259e08700d0111e0d5daf495b21a29a31f01272edf60cbca77602e";
+      //判断用户是否登录，如果未登录，则跳转到登录页
+      var userAgent = navigator.userAgent || navigator.vendor || window.opera;   
+      var isAPP = userAgent.includes('CYOLAPP');
+      // isAPP = 1;
+      if(!isAPP){   
+          // 显示“请在APP内打开”蒙版
+          if (!document.getElementById('open-in-app-mask')) {
+            var mask = document.createElement('div');
+            mask.id = 'open-in-app-mask';
+            mask.style.position = 'fixed';
+            mask.style.left = 0;
+            mask.style.top = 0;
+            mask.style.right = 0;
+            mask.style.bottom = 0;
+            mask.style.zIndex = 9999;
+            mask.style.background = 'rgba(0,0,0,0.35)'; // 更轻的遮罩
+            mask.style.display = 'flex';
+            mask.style.alignItems = 'center';
+            mask.style.justifyContent = 'center';
+            mask.style.pointerEvents = 'auto'; // 确保禁止点击
+            mask.style.userSelect = 'none';
+            mask.style.touchAction = 'none';
+            mask.addEventListener('touchmove', function(e) { e.preventDefault(); }, { passive: false });
+            mask.addEventListener('click', function(e){ e.stopPropagation(); e.preventDefault(); }, true);
+            // 大号提示语
+            mask.innerHTML = '<div style="color:#fff; font-size:28px; font-weight:bold; background:rgba(0,0,0,0.60); border-radius:20px; padding:44px 46px; text-align:center; box-shadow: 0 8px 40px rgba(0,0,0,0.10); letter-spacing:2px;">请在中国青年报APP内打开</div>';
+            document.body.appendChild(mask);
+          }
+     
+     
+      } else {
+          let isAndroid = userAgent.indexOf('Android') > -1 || userAgent.indexOf('Adr') > -1;
+          var dev = isAndroid ? 'Android' :"IOS" ;
+          if(!phone || phone.length < 100) {
+              if(dev == "Android" && typeof android !== "undefined" && android && typeof android.actionLogin === "function") {
+                  android.actionLogin();
+              } else if (dev !== "Android") {
+                  window.location.href = "login://";
+              }
+          }
+      }
+      // 用 phone 向接口请求用户信息
+      var userInfo = null;
+      if (phone) {
+        $.ajax({
+          url: "https://jiuye.cyol.com/app4/u.php",
+          type: "GET",
+          data: { phone: phone },
+          dataType: "jsonp",
+          jsonp: "callback",
+          timeout: 10000,
+          success: function(data) {
+            userInfo = data;
+            console.log(userInfo); //调试
+          },
+          error: function(xhr, status, err) {
+            console.warn("用户信息 JSONP 获取失败", status || err);
+          }
+        });
+      }
+ 
+
+
+
 
       const STORAGE_KEY = "readingweek_music_enabled";
       const DRAW_STORAGE_KEY = "readingweek_draw_state";
