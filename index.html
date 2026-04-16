@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <title>抽奖送书|全民阅读活动周·阅读挑战</title>
+  <link rel="stylesheet" href="https://ugc-s.cyol.com/themes/demo-wap/assets/css/app/openApp2026.css">
   <style>
     * {
       box-sizing: border-box;
@@ -886,9 +887,49 @@
     </section>
   </div>
 
+  <!-- APP下载 -->
+  <div class="shows" style="display:none;">
+    <div id="floor_div">
+      <div id="lefticon">
+        <img src="https://m.cyol.com//themes/cyolwap/assets/images/app/logo.png" alt="">
+        <p>
+          <span>更多精彩,</span>
+          <span>请下载中青报客户端</span>
+        </p>
+      </div>
+      <div id="downloadButton">
+        <wx-open-launch-app
+          id="launch-btn"
+          appid="wxb9ab4e8b8c87ee88"
+          class="xg_link_cover"
+          extinfo="cyol://news.cyol.com/share?content_type=activity/post_id=wd95JBSedR/mp=false/redirect_type=default"
+        >
+          <script type="text/wxtag-template">
+            <style>
+              .btn {
+                border: none;
+                width: 72px;
+                height: 27px;
+                border-radius: 15px;
+                background-color: #ee392e;
+                color: #fff;
+                font-size: 12px;
+                line-height: 27px;
+                text-align: center;
+                letter-spacing: 1px;
+              }
+            </style>
+            <button class="btn">打开</button>
+          </script>
+        </wx-open-launch-app>
+      </div>
+    </div>
+  </div>
+
   <audio id="bgMusic" loop preload="auto" playsinline webkit-playsinline src="./assets/bgm.mp3"></audio>
 
   <script src="./jquery.min.js"></script>
+  <script src="https://res.wx.qq.com/open/js/jweixin-1.6.0.js"></script>
   <script>
     (() => {
       function getQueryParam(name) {
@@ -904,31 +945,33 @@
       var isAPP = userAgent.includes('CYOLAPP');
       // isAPP = 1;
       if(!isAPP){   
-          // 显示“请在APP内打开”蒙版
+          var openAppBanner = document.querySelector('.shows');
+          if (openAppBanner) {
+            openAppBanner.style.display = 'block';
+            openAppBanner.style.zIndex = '10000';
+          }
+
           if (!document.getElementById('open-in-app-mask')) {
             var mask = document.createElement('div');
             mask.id = 'open-in-app-mask';
             mask.style.position = 'fixed';
-            mask.style.left = 0;
-            mask.style.top = 0;
-            mask.style.right = 0;
-            mask.style.bottom = 0;
-            mask.style.zIndex = 9999;
-            mask.style.background = 'rgba(0,0,0,0.35)'; // 更轻的遮罩
+            mask.style.left = '0';
+            mask.style.top = '0';
+            mask.style.right = '0';
+            mask.style.bottom = '0';
+            mask.style.zIndex = '9999';
+            mask.style.background = 'rgba(0,0,0,0.26)';
             mask.style.display = 'flex';
             mask.style.alignItems = 'center';
             mask.style.justifyContent = 'center';
-            mask.style.pointerEvents = 'auto'; // 确保禁止点击
+            mask.style.pointerEvents = 'auto';
             mask.style.userSelect = 'none';
             mask.style.touchAction = 'none';
             mask.addEventListener('touchmove', function(e) { e.preventDefault(); }, { passive: false });
-            mask.addEventListener('click', function(e){ e.stopPropagation(); e.preventDefault(); }, true);
-            // 大号提示语
-            mask.innerHTML = '<div style="color:#fff; font-size:28px; font-weight:bold; background:rgba(0,0,0,0.60); border-radius:20px; padding:44px 46px; text-align:center; box-shadow: 0 8px 40px rgba(0,0,0,0.10); letter-spacing:2px;">请在中国青年报APP内打开</div>';
+            mask.addEventListener('click', function(e) { e.stopPropagation(); e.preventDefault(); }, true);
+            mask.innerHTML = '<div style="max-width:76%; color:#fff; font-size:clamp(16px,4.4vw,22px); line-height:1.8; font-weight:600; background:rgba(0,0,0,0.42); border-radius:20px; padding:1.6em 1.3em 4.2em; text-align:center; box-shadow:0 8px 28px rgba(0,0,0,0.10); -webkit-backdrop-filter:blur(2px); backdrop-filter:blur(2px);">当前活动仅限在中国青年报APP内参与<br>请前往APP打开后再进行挑战</div>';
             document.body.appendChild(mask);
           }
-     
-     
       } else {
           let isAndroid = userAgent.indexOf('Android') > -1 || userAgent.indexOf('Adr') > -1;
           var dev = isAndroid ? 'Android' :"IOS" ;
@@ -1789,7 +1832,110 @@
       syncMusicIcon();
       syncP5GuidingText();
       syncP7ConfirmButtonState();
+
+
+    var shareTitle = '抽奖送书|全民阅读活动周·阅读挑战';
+		var shareDesc = '抽奖送书|全民阅读活动周·阅读挑战';
+		var shareUrl = window.location.href.split('#')[0];
+		var shareImg = 'https://h5.cyol.com/special/ReadingWeek/index.html/icon.jpg';
+
+		shareUrls = encodeURIComponent(shareUrl);
+
+		$.ajax({
+		url: 'https://h5.cyol.com/special/weixin/getShareSignature.php',
+		type: 'post',
+		data: {
+		url: shareUrl
+		},
+		dataType: 'json',
+		success: function(res) {
+		var json = res.data;
+		wx.config({
+		debug: false,
+		appId: 'wx30b9bfd6e0063ff9', // 必填，公众号的唯一标识
+		timestamp: json.timestamp, // 必填，生成签名的时间戳
+		nonceStr: json.noncestr, // 必填，生成签名的随机串
+		signature: json.signature, // 必填，签名，见附录1
+		jsApiList: ['onMenuShareAppMessage', 'onMenuShareQQ', 'onMenuShareTimeline', 'onMenuShareWeibo', 'onMenuShareQZone'], // 必填，需要使用的JS接口列表，所有JS接口列表见附录2
+		openTagList: ['wx-open-launch-app']
+		});
+
+		//===
+		wx.ready(function() {
+		//微信好友
+		wx.onMenuShareAppMessage({
+		title: shareTitle, // 分享标题
+		desc: shareDesc, // 分享描述
+		link: shareUrl, // 分享链接
+		imgUrl: shareImg, // 分享图标
+		type: 'link', // 分享类型,music、video或link，不填默认为link
+		dataUrl: '', // 如果type是music或video，则要提供数据链接，默认为空
+		success: function() {
+		// 用户确认分享后执行的回调函数
+		},
+		cancel: function() {
+		// 用户取消分享后执行的回调函数
+		}
+		});
+		//朋友圈
+		wx.onMenuShareTimeline({
+		title: shareTitle, // 分享标题
+		desc: shareDesc, // 分享描述
+		link: shareUrl, // 分享链接
+		imgUrl: shareImg, // 分享图标
+		success: function() {
+		// 用户确认分享后执行的回调函数
+		},
+		cancel: function() {
+		// 用户取消分享后执行的回调函数
+		}
+		});
+		//分享到QQ
+		wx.onMenuShareQQ({
+		title: shareTitle, // 分享标题
+		desc: shareDesc, // 分享描述
+		link: shareUrl, // 分享链接
+		imgUrl: shareImg, // 分享图标
+		success: function() {
+		// 用户确认分享后执行的回调函数
+		},
+		cancel: function() {
+		// 用户取消分享后执行的回调函数
+		}
+		});
+		//分享到腾讯微博
+		wx.onMenuShareWeibo({
+		title: shareTitle, // 分享标题
+		desc: shareDesc, // 分享描述
+		link: shareUrl, // 分享链接
+		imgUrl: shareImg, // 分享图标
+		success: function() {
+		// 用户确认分享后执行的回调函数
+		},
+		cancel: function() {
+		// 用户取消分享后执行的回调函数
+		}
+		});
+		//分享到QQ空间
+		wx.onMenuShareQZone({
+		title: shareTitle, // 分享标题
+		desc: shareDesc, // 分享描述
+		link: shareUrl, // 分享链接
+		imgUrl: shareImg, // 分享图标
+		success: function() {
+		// 用户确认分享后执行的回调函数
+		},
+		cancel: function() {
+		// 用户取消分享后执行的回调函数
+		}
+		});
+		});
+		}
+		});
+
+
     })();
+
   </script>
 </body>
 </html>
