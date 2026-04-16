@@ -888,14 +888,33 @@
 
   <audio id="bgMusic" loop preload="auto" playsinline webkit-playsinline src="./assets/bgm.mp3"></audio>
 
+  <script src="./jquery.min.js"></script>
   <script>
     (() => {
+      var phone = window.phone || "";
+      var userAgent = navigator.userAgent || navigator.vendor || window.opera;
+      var isAPP = userAgent.includes("CYOLAPP");
+      // isAPP = 1;
+      if (!isAPP) {
+        $(".shows").show();
+      } else {
+        let isAndroid = userAgent.indexOf("Android") > -1 || userAgent.indexOf("Adr") > -1;
+        var dev = isAndroid ? "Android" : "IOS";
+        if (!phone || phone.length < 100) {
+          if (dev == "Android") {
+            android.actionLogin();
+          } else {
+            window.location.href = "login://";
+          }
+        }
+      }
+
       const STORAGE_KEY = "readingweek_music_enabled";
       const DRAW_STORAGE_KEY = "readingweek_draw_state";
       const NEXT_PAGE_URL = document.body.dataset.nextUrl || "";
       const SWIPE_THRESHOLD = 60;
       const P3_SET_COUNT = 5;
-      const P3_READING_SECONDS = 20;   
+      const P3_READING_SECONDS = 0;   
       // 调试用
       const P3_CORRECT_ANSWERS = {
         1: "3",
