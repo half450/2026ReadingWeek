@@ -938,13 +938,38 @@
         ) || "";
       }
 
-      const userId = getQueryParam("user_id") || getQueryParam("userid");
-      const userName = getQueryParam("name");
+      let userId = getQueryParam("user_id") || getQueryParam("userid");
+      let userName = getQueryParam("name") || getQueryParam("nickname");
       const userAgent = navigator.userAgent || navigator.vendor || window.opera;
       const isAPP = userAgent.includes("CYOLAPP");
+      // const isAPP= 1; //调试
+      const isWeChat = /MicroMessenger/i.test(userAgent);
+      const WEB_USER_ID_KEY = isWeChat ? "readingweek_wechat_user_id" : "readingweek_h5_user_id";
+
+
 
       function hasUserIdentity() {
         return Boolean(userId && userName);
+      }
+
+      function createWebUserId(prefix) {
+        if (window.crypto && typeof window.crypto.randomUUID === "function") {
+          return `${prefix}_${window.crypto.randomUUID()}`;
+        }
+        return `${prefix}_${Date.now()}_${Math.random().toString(16).slice(2)}`;
+      }
+
+      function getStoredWebUserId() {
+        try {
+          let storedId = localStorage.getItem(WEB_USER_ID_KEY);
+          if (!storedId) {
+            storedId = createWebUserId(isWeChat ? "wx" : "h5");
+            localStorage.setItem(WEB_USER_ID_KEY, storedId);
+          }
+          return storedId;
+        } catch (error) {
+          return createWebUserId(isWeChat ? "wx" : "h5");
+        }
       }
 
       function triggerAppLogin() {
@@ -956,38 +981,27 @@
         }
       }
 
-      if(!isAPP){
-          var openAppBanner = document.querySelector('.shows');
-          if (openAppBanner) {
-            openAppBanner.style.display = 'block';
-            openAppBanner.style.zIndex = '10000';
-          }
+      if (!userId && !isAPP) {
+        userId = getStoredWebUserId();
+      }
+      if (!userName && !isAPP) {
+        userName = isWeChat ? "微信用户" : "H5用户";
+      }
 
-          if (!document.getElementById('open-in-app-mask')) {
-            var mask = document.createElement('div');
-            mask.id = 'open-in-app-mask';
-            mask.style.position = 'fixed';
-            mask.style.left = '0';
-            mask.style.top = '0';
-            mask.style.right = '0';
-            mask.style.bottom = '0';
-            mask.style.zIndex = '9999';
-            mask.style.background = 'rgba(0,0,0,0.26)';
-            mask.style.display = 'flex';
-            mask.style.alignItems = 'center';
-            mask.style.justifyContent = 'center';
-            mask.style.pointerEvents = 'auto';
-            mask.style.userSelect = 'none';
-            mask.style.touchAction = 'none';
-            mask.addEventListener('touchmove', function(e) { e.preventDefault(); }, { passive: false });
-            mask.addEventListener('click', function(e) { e.stopPropagation(); e.preventDefault(); }, true);
-            mask.innerHTML = '<div style="max-width:76%; color:#fff; font-size:clamp(16px,4.4vw,22px); line-height:1.8; font-weight:600; background:rgba(0,0,0,0.42); border-radius:20px; padding:1.6em 1.3em 4.2em; text-align:center; box-shadow:0 8px 28px rgba(0,0,0,0.10); -webkit-backdrop-filter:blur(2px); backdrop-filter:blur(2px);">当前活动仅限在中国青年报APP内参与<br>请前往APP打开后再进行挑战</div>';
-            document.body.appendChild(mask);
-          }
-      } else {
-          if (!hasUserIdentity()) {
-              triggerAppLogin();
-          }
+      if (!isAPP) {
+        const openAppBanner = document.querySelector(".shows");
+        if (openAppBanner) {
+          openAppBanner.style.display = "block";
+        }
+        console.info("Non-APP user info:", {
+          user_id: userId,
+          name: userName,
+          isWeChat: isWeChat
+        });
+      }
+
+      if (isAPP && !hasUserIdentity()) {
+          triggerAppLogin();
       }
  
 
@@ -995,7 +1009,10 @@
 
 
       const STORAGE_KEY = "readingweek_music_enabled";
-      const API_BASE = "/api/readingweek";
+      const API_HOST = "https://h5.cyol.com/certificate/tcj";
+      const CHECK_STATUS_API = `${API_HOST}/check-status.php`;
+      const DRAW_API = `${API_HOST}/draw.php`;
+      const SUBMIT_ADDRESS_API = `${API_HOST}/submit-address.php`;
       const NEXT_PAGE_URL = document.body.dataset.nextUrl || "";
       const SWIPE_THRESHOLD = 60;
       const P3_SET_COUNT = 5;
@@ -1048,10 +1065,8 @@
         p3CountdownTimer: null,
         p3SelectedOption: "",
         p3AnswerCorrect: false,
-        submittingQuizAnswers: false,
         drawing: false,
         submittingAddress: false,
-        currentDrawId: "",
         currentPrizeName: ""
       };
 
@@ -1136,17 +1151,17 @@
         if (hasUserIdentity()) {
           return true;
         }
-        showMessage("未获取到用户信息，请在APP内重新打开活动");
+        showMessage(isAPP ? "未获取到用户信息，请在APP内重新打开活动" : "未获取到用户信息，请刷新后重试");
         if (isAPP) {
           triggerAppLogin();
         }
         return false;
       }
 
-      function postApi(path, payload) {
+      function postApi(url, payload) {
         return new Promise((resolve, reject) => {
           $.ajax({
-            url: `${API_BASE}${path}`,
+            url: url,
             type: "POST",
             data: JSON.stringify(payload),
             contentType: "application/json",
@@ -1165,37 +1180,15 @@
         });
       }
 
-      function normalizeApiResponse(response) {
-        if (!response || response.code !== 200) {
-          throw new Error((response && response.message) || "接口返回异常");
+      function assertApiResponse(response) {
+        if (!response || typeof response.code === "undefined") {
+          throw new Error("接口返回异常");
         }
-        return response.data || {};
+        return response;
       }
 
-      function getQuizAnswersPayload() {
-        return questions.map((question) => {
-          const selected = Number(state.answers[question.id]);
-          return Number.isFinite(selected) ? selected - 1 : -1;
-        });
-      }
-
-      async function submitInitialAnswers() {
-        const answers = getQuizAnswersPayload();
-        if (answers.length !== 3 || answers.some((value) => value < 0 || value > 2)) {
-          throw new Error("请先完成前三道选择题");
-        }
-        const data = normalizeApiResponse(await postApi("/submit-answers", {
-          ...getUserPayload(),
-          answers: answers
-        }));
-        if (data.saved === false) {
-          throw new Error("题目提交失败，请稍后重试");
-        }
-      }
-
-      function showPendingPrizePage(prizeName, drawId) {
+      function showPendingPrizePage(prizeName) {
         state.currentPrizeName = prizeName || "";
-        state.currentDrawId = drawId || "";
         state.pageEntered = true;
         hidePopup();
         page1.classList.add("leave-up");
@@ -1208,13 +1201,17 @@
       }
 
       async function checkInitialUserStatus() {
-        if (!isAPP || !hasUserIdentity()) {
+        if (!hasUserIdentity()) {
           return;
         }
         try {
-          const data = normalizeApiResponse(await postApi("/check-status", getUserPayload()));
+          const response = assertApiResponse(await postApi(CHECK_STATUS_API, getUserPayload()));
+          if (response.code !== 200) {
+            throw new Error(response.message || "检查用户状态失败");
+          }
+          const data = response.data || {};
           if (data.has_pending_prize) {
-            showPendingPrizePage(data.prize_name, data.draw_id);
+            showPendingPrizePage(data.prize_name || "");
           }
         } catch (error) {
           console.warn("初始状态检查失败", error);
@@ -1231,20 +1228,22 @@
         state.drawing = true;
         p6LotteryBtn.disabled = true;
         try {
-          const data = normalizeApiResponse(await postApi("/draw", getUserPayload()));
-          state.currentDrawId = "";
+          const response = assertApiResponse(await postApi(DRAW_API, getUserPayload()));
+          const data = response.data || {};
           state.currentPrizeName = "";
 
-          if (data.result === "limit") {
+          if (response.code === 4004 || data.result === "limit") {
             showP7LosePage(true);
             return true;
+          }
+          if (response.code !== 200) {
+            throw new Error(response.message || "抽奖失败，请稍后重试");
           }
           if (data.result === "lose") {
             showP7LosePage(false);
             return true;
           }
           if (data.result === "win") {
-            state.currentDrawId = data.draw_id || "";
             state.currentPrizeName = data.prize_name || "";
             showP7WinPage(state.currentPrizeName);
             return true;
@@ -1575,7 +1574,6 @@
         state.p3SetIndex = Math.floor(Math.random() * P3_SET_COUNT) + 1;
         state.p3SelectedOption = "";
         state.p3AnswerCorrect = false;
-        state.currentDrawId = "";
         state.currentPrizeName = "";
         syncP3SubmitButtonState();
         hidePopup();
@@ -1676,24 +1674,11 @@
         });
       }
 
-      async function handleBeginChallenge() {
-        if (state.submittingQuizAnswers) {
-          return;
-        }
+      function handleBeginChallenge() {
         if (!ensureUserIdentity()) {
           return;
         }
-        state.submittingQuizAnswers = true;
-        popupEnter.disabled = true;
-        try {
-          await submitInitialAnswers();
-          startP3ChallengeFlow();
-        } catch (error) {
-          showMessage(error.message || "题目提交失败，请稍后重试");
-        } finally {
-          state.submittingQuizAnswers = false;
-          popupEnter.disabled = false;
-        }
+        startP3ChallengeFlow();
       }
 
       function preloadImages() {
@@ -1864,10 +1849,6 @@
         if (!ensureUserIdentity()) {
           return;
         }
-        if (!state.currentDrawId) {
-          showMessage("未获取到中奖记录，请重新进入中奖页面");
-          return;
-        }
 
         const recipient = recipientInput.value.trim();
         const phone = phoneInput.value.trim();
@@ -1875,14 +1856,17 @@
         state.submittingAddress = true;
         p7ConfirmBtn.disabled = true;
         try {
-          const data = normalizeApiResponse(await postApi("/submit-address", {
+          const response = assertApiResponse(await postApi(SUBMIT_ADDRESS_API, {
             ...getUserPayload(),
-            draw_id: state.currentDrawId,
             recipient: recipient,
             mobile: phone,
             address: address
           }));
-          if (data.saved === false) {
+          const data = response.data || {};
+          if (response.code !== 200) {
+            throw new Error(response.message || "地址提交失败，请稍后重试");
+          }
+          if (data.submitted === false) {
             throw new Error("地址提交失败，请稍后重试");
           }
 
@@ -1976,7 +1960,7 @@
     var shareTitle = '抽奖送书|全民阅读活动周·阅读挑战';
 		var shareDesc = '抽奖送书|全民阅读活动周·阅读挑战';
 		var shareUrl = window.location.href.split('#')[0];
-		var shareImg = 'https://h5.cyol.com/special/ReadingWeek/index.html/icon.jpg';
+		var shareImg = 'https://h5.cyol.com/special/ReadingWeek/index.html/icon.png';
 
 		shareUrls = encodeURIComponent(shareUrl);
 
