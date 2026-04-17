@@ -101,6 +101,11 @@
 
     #page4 {
       z-index: 40;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 4vw;
+      background: rgba(8, 6, 4, 0.78);
     }
 
     #page5 {
@@ -789,6 +794,26 @@
       transform: translateX(-50%) scale(0.98);
     }
 
+    .p4-popup-card {
+      position: relative;
+      width: 96vw;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .p4-popup-image {
+      width: 100%;
+      height: auto;
+      display: block;
+    }
+
+    .p4-popup-card .continue-btn {
+      bottom: 12%;
+      width: 42vw;
+      z-index: 2;
+    }
+
     .popup-close:active {
       transform: scale(0.95);
     }
@@ -875,11 +900,13 @@
       </div>
     </section>
 
-    <section id="page4" class="layer" aria-label="答题结果页">
-      <img id="p4ResultBg" class="layer-bg" src="./assets/p4/Correctanswer.png" alt="答题结果">
-      <button id="continueBtn" class="continue-btn" type="button" aria-label="继续参与">
-        <img src="./assets/p4/Continue.png" alt="继续参与">
-      </button>
+    <section id="page4" class="layer" aria-label="答题结果弹窗">
+      <div class="p4-popup-card">
+        <img id="p4ResultBg" class="p4-popup-image" src="./assets/p4/Correctanswer.png" alt="答题结果">
+        <button id="continueBtn" class="continue-btn" type="button" aria-label="继续参与">
+          <img src="./assets/p4/Continue.png" alt="继续参与">
+        </button>
+      </div>
     </section>
 
     <section id="page5" class="layer" aria-label="写下感受页">
@@ -1654,11 +1681,11 @@
         p4ResultBg.src = state.p3AnswerCorrect
           ? "./assets/p4/Correctanswer.png"
           : "./assets/p4/Incorrectanswer.png";
-        page3.classList.remove("show");
         page4.classList.add("show");
       }
 
       function enterP5Page() {
+        page3.classList.remove("show");
         page4.classList.remove("show");
         page5.classList.add("show");
         hideP6LotteryPopup();
