@@ -938,6 +938,7 @@
         ) || "";
       }
 
+      const phone = getQueryParam("phone") //调试 || "ee9e6ad39da4797955a1dc53f8ae584927aba9bd037404cd4f1008ae154f815ab05f75fec3ec989c47fde56001bd27aacb7c7bce8328b665c81aa76ca8c680114ee4ed504cd15e72b064c3e9bf2b74c9a5a2f3cd6ab3aaf2f9e214ef5cbb62226207c4a64a7e90ee88cb6d47e3f25490aa9548b733c4a72501133bc66537d7e16ae1b6e7798fd5cda17c8ae8b3938d9150d8c40e4a7642ed7ca9230bbfe6b50b53b278aa12c4acd86e1311e69f221f0db6c5d0297c9c501e7ca53b8c9a74056a006b0a388b487c57b3f09a0cde7115fd3a368982c5826f7367563c7c837601739db5c2e2703ad545f5873e99ea75d448b2fd1876d429683fe2b35da2b31c5326d2af13249ee2be79051dbe0962631a00e5f7b5c8714415c0ddc97d10a9c616beeff717cfd219c1e4ce1e9170e8a03e3a8ee148f63faa793462559cc32501f0b6be93aea6e9259e08700d0111e0d5daf495b21a29a31f01272edf60cbca77602e";
       let userId = getQueryParam("user_id") || getQueryParam("userid");
       let userName = getQueryParam("name") || getQueryParam("nickname");
       const userAgent = navigator.userAgent || navigator.vendor || window.opera;
@@ -945,6 +946,7 @@
       // const isAPP= 1; //调试
       const isWeChat = /MicroMessenger/i.test(userAgent);
       const WEB_USER_ID_KEY = isWeChat ? "readingweek_wechat_user_id" : "readingweek_h5_user_id";
+      let userIdentityReadyPromise = Promise.resolve();
 
 
 
@@ -981,6 +983,26 @@
         }
       }
 
+      function fetchAppUserInfoByPhone(phoneValue) {
+        return new Promise((resolve, reject) => {
+          $.getJSON(`https://jiuye.cyol.com/app4/u.php?phone=${encodeURIComponent(phoneValue)}&callback=?`, function(response) {
+            if (response && response.user_id && response.name) {
+              userId = response.user_id;
+              userName = response.name;
+              console.info("APP user info:", {
+                user_id: userId,
+                name: userName
+              });
+              resolve(response);
+              return;
+            }
+            reject(new Error("未获取到有效用户信息"));
+          }).fail(function(jqxhr, textStatus, errorThrown) {
+            reject(new Error(errorThrown || textStatus || "获取用户信息失败"));
+          });
+        });
+      }
+
       if (!userId && !isAPP) {
         userId = getStoredWebUserId();
       }
@@ -1001,7 +1023,11 @@
       }
 
       if (isAPP && !hasUserIdentity()) {
+        if (phone) {
+          userIdentityReadyPromise = fetchAppUserInfoByPhone(phone);
+        } else {
           triggerAppLogin();
+        }
       }
  
 
@@ -1147,7 +1173,8 @@
         };
       }
 
-      function ensureUserIdentity() {
+      async function ensureUserIdentity() {
+        await userIdentityReadyPromise.catch(() => null);
         if (hasUserIdentity()) {
           return true;
         }
@@ -1201,7 +1228,7 @@
       }
 
       async function checkInitialUserStatus() {
-        if (!hasUserIdentity()) {
+        if (!await ensureUserIdentity()) {
           return;
         }
         try {
@@ -1222,7 +1249,7 @@
         if (state.drawing) {
           return false;
         }
-        if (!ensureUserIdentity()) {
+        if (!await ensureUserIdentity()) {
           return false;
         }
         state.drawing = true;
@@ -1674,8 +1701,8 @@
         });
       }
 
-      function handleBeginChallenge() {
-        if (!ensureUserIdentity()) {
+      async function handleBeginChallenge() {
+        if (!await ensureUserIdentity()) {
           return;
         }
         startP3ChallengeFlow();
@@ -1846,7 +1873,7 @@
         if (state.submittingAddress) {
           return;
         }
-        if (!ensureUserIdentity()) {
+        if (!await ensureUserIdentity()) {
           return;
         }
 
