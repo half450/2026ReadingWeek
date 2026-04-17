@@ -309,6 +309,37 @@
       transform: translateX(-50%);
     }
 
+    .p7-win-message {
+      position: absolute;
+      left: 50%;
+      bottom: 30%;
+      width: 72%;
+      transform: translateX(-50%);
+      z-index: 4;
+      text-align: center;
+      color: #8e4f1f;
+      text-shadow: 0 1px 2px rgba(255, 248, 233, 0.35);
+      display: none;
+      pointer-events: none;
+    }
+
+    .p7-win-message.show {
+      display: block;
+    }
+
+    .p7-win-message-title {
+      font-size: 3.8vw;
+      line-height: 1.7;
+      font-weight: 700;
+    }
+
+    .p7-win-message-subtitle {
+      margin-top: 1vw;
+      font-size: 3.8vw;
+      line-height: 1.7;
+      font-weight: 600;
+    }
+
     .p7-primary-btn:active,
     .p7-secondary-btn:active {
       opacity: 0.86;
@@ -853,6 +884,10 @@
       <button id="p7PrimaryBtn" class="p7-primary-btn" type="button" aria-label="主要操作">
         <img id="p7PrimaryBtnImg" src="./assets/p7/address.png" alt="主要操作">
       </button>
+      <div id="p7WinMessage" class="p7-win-message" aria-live="polite">
+        <div id="p7WinMessageTitle" class="p7-win-message-title"></div>
+        <div class="p7-win-message-subtitle">分享给朋友一起来参与挑战吧！</div>
+      </div>
 
       <div id="p7AddressMask" class="p7-address-mask" aria-hidden="true">
         <div class="p7-address-card">
@@ -1043,6 +1078,8 @@
       const CHECK_STATUS_API = `${API_HOST}/check-status.php`;
       const DRAW_API = `${API_HOST}/draw.php`;
       const SUBMIT_ADDRESS_API = `${API_HOST}/submit-address.php`;
+      // const DEBUG_PREVIEW_WIN_PAGE = true;
+      // const DEBUG_PREVIEW_PRIZE_NAME = "神秘的宇宙：詹姆斯·金斯著 青少年物理世界科普经典名著 物理学观念上的重大革命 中小学生课外阅读";
       const NEXT_PAGE_URL = document.body.dataset.nextUrl || "";
       const SWIPE_THRESHOLD = 60;
       const P3_SET_COUNT = 5;
@@ -1130,6 +1167,8 @@
       const p6LotteryBtn = document.getElementById("p6LotteryBtn");
       const page7 = document.getElementById("page7");
       const p7ResultBg = document.getElementById("p7ResultBg");
+      const p7WinMessage = document.getElementById("p7WinMessage");
+      const p7WinMessageTitle = document.getElementById("p7WinMessageTitle");
       const p7PrimaryBtn = document.getElementById("p7PrimaryBtn");
       const p7PrimaryBtnImg = document.getElementById("p7PrimaryBtnImg");
       const p7SecondaryBtn = document.getElementById("p7SecondaryBtn");
@@ -1563,6 +1602,23 @@
         enterP3ReadingScreen();
       }
 
+      function hideP7WinMessage() {
+        if (!p7WinMessage || !p7WinMessageTitle) {
+          return;
+        }
+        p7WinMessage.classList.remove("show");
+        p7WinMessageTitle.textContent = "";
+      }
+
+      function showP7WinMessage(prizeName) {
+        if (!p7WinMessage || !p7WinMessageTitle) {
+          return;
+        }
+        const safePrizeName = prizeName || "奖品";
+        p7WinMessageTitle.textContent = `恭喜你获得《${safePrizeName}》1本。`;
+        p7WinMessage.classList.add("show");
+      }
+
       function showP7WinPage(prizeName) {
         state.currentPrizeName = prizeName || state.currentPrizeName || "";
         page5.classList.remove("show");
@@ -1571,10 +1627,12 @@
         p7ResultBg.src = "./assets/p7/Awarddetailspage.png";
         p7PrimaryBtnImg.src = "./assets/p7/address.png";
         p7PrimaryBtn.setAttribute("aria-label", "填写地址");
+        showP7WinMessage(state.currentPrizeName);
       }
 
       function showP7LosePage(limitReached) {
         page5.classList.remove("show");
+        hideP7WinMessage();
         if (limitReached) {
           page7.className = "layer show p7-single-button";
           p7ResultBg.src = "./assets/p7/Noawarddetailspage2.png";
