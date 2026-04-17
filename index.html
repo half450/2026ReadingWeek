@@ -639,63 +639,65 @@
       z-index: 30;
     }
 
-    .quiz-panel {
+    .p2-question-wrap {
       position: absolute;
-      top: 22%;
-      left: 5.8%;
-      width: 86%;
-      height: 65%;
+      top: 27.5%;
+      left: 11%;
+      width: 78%;
       z-index: 20;
-      overflow: hidden;
-      border-radius: 2.4vw;
-    }
-
-    .quiz-scroll {
-      width: 100%;
-      height: 100%;
-      overflow-y: auto;
-      -webkit-overflow-scrolling: touch;
-      padding: 3% 4% 5%;
-      scrollbar-width: none;
-    }
-
-    .quiz-scroll::-webkit-scrollbar {
-      display: none;
-    }
-
-    .question-block + .question-block {
-      margin-top: 0.9vw;
-    }
-
-    .question-title {
-      width: 94%;
-      margin-bottom: 3vw;
-    }
-
-    .option-list {
       display: flex;
       flex-direction: column;
-      align-items: flex-start;
-      gap: 0.18vw;
+      align-items: center;
     }
 
-    .option-btn {
-      width: 88%;
+    .p2-question-image {
+      width: 90%;
       height: auto;
-      aspect-ratio: 908 / 86;
-      border: 0.3vw solid transparent;
-      border-radius: 100vmax;
-      overflow: hidden;
-      background-position: top left;
-      background-repeat: no-repeat;
-      background-size: 100% auto;
-      filter: drop-shadow(0 0.3vw 0.8vw rgba(0, 0, 0, 0.06));
+      margin-bottom: 4.8vw;
+    }
+
+    .p2-option-list {
+      width: 80%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 3vw;
+    }
+
+    .p2-option-btn {
+      width: 100%;
+      display: block;
       transition: transform 0.18s ease, opacity 0.18s ease;
     }
 
-    .option-btn:active {
+    .p2-option-btn img {
+      width: 100%;
+      height: auto;
+      display: block;
+    }
+
+    .p2-option-btn:active {
       transform: scale(0.98);
       opacity: 0.88;
+    }
+
+    .p2-submit-btn {
+      position: absolute;
+      left: 50%;
+      bottom: 7%;
+      width: 35vw;
+      transform: translateX(-50%);
+      z-index: 25;
+      opacity: 0.72;
+      transition: opacity 0.2s ease, transform 0.15s ease;
+    }
+
+    .p2-submit-btn.enabled {
+      opacity: 1;
+    }
+
+    .p2-submit-btn:active {
+      transform: translateX(-50%) scale(0.98);
     }
 
     .popup-mask {
@@ -705,8 +707,8 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      padding: 4vw;
-      background: rgba(8, 6, 4, 0.78);
+      padding: 0;
+      background: rgba(8, 6, 4, 0.22);
       opacity: 0;
       pointer-events: none;
       transition: opacity 0.25s ease;
@@ -719,13 +721,37 @@
 
     .popup-card {
       position: relative;
-      width: 96vw;
       display: flex;
       align-items: center;
       justify-content: center;
     }
 
     .popup-image {
+      display: block;
+    }
+
+    .popup-mask.analysis-mode .popup-card {
+      width: 100%;
+      height: 100%;
+    }
+
+    .popup-mask.analysis-mode .popup-image {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .popup-mask.notice-mode {
+      padding: 4vw;
+      background: rgba(8, 6, 4, 0.78);
+    }
+
+    .popup-mask.notice-mode .popup-card {
+      width: 96vw;
+      height: auto;
+    }
+
+    .popup-mask.notice-mode .popup-image {
       width: 100%;
       height: auto;
     }
@@ -741,10 +767,17 @@
     .popup-enter {
       position: absolute;
       left: 50%;
-      bottom: 36%;
-      width: 38vw;
+      width: 35vw;
       transform: translateX(-50%);
       z-index: 2;
+    }
+
+    .popup-mask.analysis-mode .popup-enter {
+      bottom: 7%;
+    }
+
+    .popup-mask.notice-mode .popup-enter {
+      bottom: 38%;
     }
 
     .popup-enter:active,
@@ -767,12 +800,13 @@
         height: 65.5%;
       }
 
-      .question-block + .question-block {
-        margin-top: 0.8vw;
+      .p2-question-wrap {
+        top: 26.5%;
       }
 
-      .option-list {
-        gap: 0.15vw;
+      .p2-option-list {
+        width: 79%;
+        gap: 2.6vw;
       }
 
       .p3-question-panel {
@@ -802,18 +836,19 @@
     <section id="page2" class="layer" aria-label="答题页">
       <img class="layer-bg" src="./assets/p2/backgroundimage.png" alt="答题背景">
 
-      <div class="quiz-panel">
-        <div class="quiz-scroll" id="quizContainer"></div>
+      <div class="p2-question-wrap">
+        <img class="p2-question-image" src="./assets/p2/Q.png" alt="多选题">
+        <div id="p2OptionList" class="p2-option-list"></div>
       </div>
+      <button id="p2SubmitBtn" class="p2-submit-btn" type="button" aria-label="继续参与">
+        <img src="./assets/p2/Continue_to_participate.png" alt="继续参与">
+      </button>
 
       <div id="popupMask" class="popup-mask" aria-hidden="true">
         <div class="popup-card">
-          <img class="popup-image" src="./assets/p2/pop-up_notification-read.png" alt="挑战提示">
-          <button id="popupClose" class="popup-close" type="button" aria-label="关闭弹窗">
-            <img src="./assets/p2/close.png" alt="关闭">
-          </button>
-          <button id="popupEnter" class="popup-enter" type="button" aria-label="开始挑战">
-            <img src="./assets/p2/begin_the_challenge.png" alt="开始挑战">
+          <img id="popupImage" class="popup-image" src="./assets/p2/Answer_Analysis.png" alt="答案解析">
+          <button id="popupEnter" class="popup-enter" type="button" aria-label="继续参与">
+            <img id="popupEnterImg" src="./assets/p2/Continue_to_participate.png" alt="继续参与">
           </button>
         </div>
       </div>
@@ -1092,41 +1127,21 @@
         4: "1",
         5: "2"
       };
-      const questions = [
-        {
-          id: "q1",
-          title: "./assets/p2/Q1.png",
-          options: [
-            { id: "1", defaultSrc: "./assets/p2/Q1-option1.png", selectedSrc: "./assets/p2/Q1-option1_Select.png" },
-            { id: "2", defaultSrc: "./assets/p2/Q1-option2.png", selectedSrc: "./assets/p2/Q1-option2_Select.png" },
-            { id: "3", defaultSrc: "./assets/p2/Q1-option3.png", selectedSrc: "./assets/p2/Q1-option3_Select.png" }
-          ]
-        },
-        {
-          id: "q2",
-          title: "./assets/p2/Q2.png",
-          options: [
-            { id: "1", defaultSrc: "./assets/p2/Q2-option1.png", selectedSrc: "./assets/p2/Q2-option1_Select.png" },
-            { id: "2", defaultSrc: "./assets/p2/Q2-option2.png", selectedSrc: "./assets/p2/Q2-option2_Select.png" },
-            { id: "3", defaultSrc: "./assets/p2/Q2-option3.png", selectedSrc: "./assets/p2/Q2-option3_Select.png" }
-          ]
-        },
-        {
-          id: "q3",
-          title: "./assets/p2/Q3.png",
-          options: [
-            { id: "1", defaultSrc: "./assets/p2/Q3-option1.png", selectedSrc: "./assets/p2/Q3-option1_Select.png" },
-            { id: "2", defaultSrc: "./assets/p2/Q3-option2.png", selectedSrc: "./assets/p2/Q3-option2_Select.png" },
-            { id: "3", defaultSrc: "./assets/p2/Q3-option3.png", selectedSrc: "./assets/p2/Q3-option3_Select.png" }
-          ]
-        }
+      const P2_OPTIONS = [
+        { id: "A", defaultSrc: "./assets/p2/op1.png", selectedSrc: "./assets/p2/op1_s.png" },
+        { id: "B", defaultSrc: "./assets/p2/op2.png", selectedSrc: "./assets/p2/op2_s.png" },
+        { id: "C", defaultSrc: "./assets/p2/op3.png", selectedSrc: "./assets/p2/op3_s.png" },
+        { id: "D", defaultSrc: "./assets/p2/op4.png", selectedSrc: "./assets/p2/op4_s.png" },
+        { id: "E", defaultSrc: "./assets/p2/op5.png", selectedSrc: "./assets/p2/op5_s.png" }
       ];
+      const P2_CORRECT_OPTIONS = ["A", "B", "C", "E"];
 
       const state = {
         pageEntered: false,
         popupVisible: false,
+        popupMode: "",
         musicEnabled: getStoredMusicPreference(),
-        answers: {},
+        p2SelectedOptions: [],
         p3SetIndex: 1,
         p3ReadingSeconds: P3_READING_SECONDS,
         p3CountdownTimer: null,
@@ -1142,10 +1157,12 @@
       const unlockBtn = document.getElementById("unlockBtn");
       const musicBtn = document.getElementById("musicBtn");
       const musicIcon = document.getElementById("musicIcon");
-      const quizContainer = document.getElementById("quizContainer");
+      const p2OptionList = document.getElementById("p2OptionList");
+      const p2SubmitBtn = document.getElementById("p2SubmitBtn");
       const popupMask = document.getElementById("popupMask");
-      const popupClose = document.getElementById("popupClose");
+      const popupImage = document.getElementById("popupImage");
       const popupEnter = document.getElementById("popupEnter");
+      const popupEnterImg = document.getElementById("popupEnterImg");
       const page3 = document.getElementById("page3");
       const page4 = document.getElementById("page4");
       const page5 = document.getElementById("page5");
@@ -1384,16 +1401,130 @@
         }
       }
 
-      function showPopup() {
+      function showPopup(mode) {
         state.popupVisible = true;
+        state.popupMode = mode;
+        popupMask.classList.remove("analysis-mode", "notice-mode");
+        popupMask.classList.add(mode === "notice" ? "notice-mode" : "analysis-mode");
+        if (mode === "notice") {
+          popupImage.src = "./assets/p2/pop-up_notification-read.png";
+          popupImage.alt = "挑战提示";
+          popupEnterImg.src = "./assets/p2/begin_the_challenge.png";
+          popupEnterImg.alt = "开始挑战";
+          popupEnter.setAttribute("aria-label", "开始挑战");
+        } else {
+          popupImage.src = "./assets/p2/Answer_Analysis.png";
+          popupImage.alt = "答案解析";
+          popupEnterImg.src = "./assets/p2/Continue_to_participate.png";
+          popupEnterImg.alt = "继续参与";
+          popupEnter.setAttribute("aria-label", "继续参与");
+        }
         popupMask.classList.add("show");
         popupMask.setAttribute("aria-hidden", "false");
       }
 
       function hidePopup() {
         state.popupVisible = false;
+        state.popupMode = "";
         popupMask.classList.remove("show");
+        popupMask.classList.remove("analysis-mode", "notice-mode");
         popupMask.setAttribute("aria-hidden", "true");
+      }
+
+      function syncP2SubmitButtonState() {
+        p2SubmitBtn.classList.toggle("enabled", state.p2SelectedOptions.length > 0);
+      }
+
+      function updateP2OptionButton(button, isSelected) {
+        const image = button.querySelector("img");
+        if (image) {
+          image.src = isSelected ? button.dataset.selectedSrc : button.dataset.defaultSrc;
+        }
+        button.setAttribute("aria-pressed", String(isSelected));
+      }
+
+      function toggleP2Option(optionId) {
+        const selectedOptions = new Set(state.p2SelectedOptions);
+        if (selectedOptions.has(optionId)) {
+          selectedOptions.delete(optionId);
+        } else {
+          selectedOptions.add(optionId);
+        }
+        state.p2SelectedOptions = P2_OPTIONS
+          .map((option) => option.id)
+          .filter((id) => selectedOptions.has(id));
+
+        const optionButtons = p2OptionList.querySelectorAll(".p2-option-btn");
+        optionButtons.forEach((button) => {
+          updateP2OptionButton(button, selectedOptions.has(button.dataset.optionId));
+        });
+
+        syncP2SubmitButtonState();
+      }
+
+      function isP2AnswerCorrect() {
+        if (state.p2SelectedOptions.length !== P2_CORRECT_OPTIONS.length) {
+          return false;
+        }
+        return P2_CORRECT_OPTIONS.every((optionId) => state.p2SelectedOptions.includes(optionId));
+      }
+
+      function resetP2Selections() {
+        state.p2SelectedOptions = [];
+        const optionButtons = p2OptionList.querySelectorAll(".p2-option-btn");
+        optionButtons.forEach((button) => updateP2OptionButton(button, false));
+        syncP2SubmitButtonState();
+      }
+
+      function renderP2Options() {
+        p2OptionList.innerHTML = "";
+        P2_OPTIONS.forEach((option) => {
+          const button = document.createElement("button");
+          const image = document.createElement("img");
+          button.type = "button";
+          button.className = "p2-option-btn";
+          button.dataset.optionId = option.id;
+          button.dataset.defaultSrc = option.defaultSrc;
+          button.dataset.selectedSrc = option.selectedSrc;
+          button.setAttribute("aria-label", `选项${option.id}`);
+          image.alt = `选项${option.id}`;
+          button.appendChild(image);
+          updateP2OptionButton(button, false);
+          button.addEventListener("click", () => toggleP2Option(option.id));
+          p2OptionList.appendChild(button);
+        });
+        syncP2SubmitButtonState();
+      }
+
+      async function handleP2Submit() {
+        if (!state.p2SelectedOptions.length) {
+          return;
+        }
+        if (isP2AnswerCorrect()) {
+          if (!await ensureUserIdentity()) {
+            return;
+          }
+          hidePopup();
+          startP3ChallengeFlow();
+          return;
+        }
+        showPopup("analysis");
+      }
+
+      async function handleP2PopupEnter() {
+        if (state.popupMode === "analysis") {
+          showPopup("notice");
+          return;
+        }
+        if (state.popupMode === "notice") {
+          if (!await ensureUserIdentity()) {
+            return;
+          }
+          hidePopup();
+          startP3ChallengeFlow();
+          return;
+        }
+        hidePopup();
       }
 
       function getP3SetAssets(index) {
@@ -1580,10 +1711,13 @@
       function resetToStartPage() {
         state.pageEntered = false;
         state.popupVisible = false;
+        state.popupMode = "";
+        state.p2SelectedOptions = [];
         state.p3SelectedOption = "";
         state.p3AnswerCorrect = false;
         clearP3Countdown();
         hidePopup();
+        resetP2Selections();
         hideP6LotteryPopup();
         hideP7AddressPopup();
         hideP8SharePopup();
@@ -1661,11 +1795,13 @@
 
       function startP3ChallengeFlow() {
         state.p3SetIndex = Math.floor(Math.random() * P3_SET_COUNT) + 1;
+        state.p2SelectedOptions = [];
         state.p3SelectedOption = "";
         state.p3AnswerCorrect = false;
         state.currentPrizeName = "";
         syncP3SubmitButtonState();
         hidePopup();
+        resetP2Selections();
         page5.classList.remove("show");
         p5Textarea.value = "";
         syncP5GuidingText();
@@ -1690,64 +1826,6 @@
         page4.classList.remove("show");
       }
 
-      function allQuestionsAnswered() {
-        return questions.every((question) => Boolean(state.answers[question.id]));
-      }
-
-      function handleOptionSelect(questionId, optionId) {
-        state.answers[questionId] = optionId;
-
-        const optionButtons = quizContainer.querySelectorAll(`[data-question-id="${questionId}"]`);
-        optionButtons.forEach((button) => {
-          const isSelected = button.dataset.optionId === optionId;
-          button.style.backgroundImage = `url("${isSelected ? button.dataset.selectedSrc : button.dataset.defaultSrc}")`;
-          button.setAttribute("aria-pressed", String(isSelected));
-        });
-
-        if (allQuestionsAnswered()) {
-          showPopup();
-        }
-      }
-
-      function createQuestionBlock(question) {
-        const wrapper = document.createElement("section");
-        wrapper.className = "question-block";
-
-        const title = document.createElement("img");
-        title.className = "question-title";
-        title.src = question.title;
-        title.alt = "问题";
-        wrapper.appendChild(title);
-
-        const optionList = document.createElement("div");
-        optionList.className = "option-list";
-
-        question.options.forEach((option) => {
-          const button = document.createElement("button");
-          button.type = "button";
-          button.className = "option-btn";
-          button.dataset.questionId = question.id;
-          button.dataset.optionId = option.id;
-          button.dataset.defaultSrc = option.defaultSrc;
-          button.dataset.selectedSrc = option.selectedSrc;
-          button.setAttribute("aria-label", `${question.id}-${option.id}`);
-          button.setAttribute("aria-pressed", "false");
-          button.style.backgroundImage = `url("${option.defaultSrc}")`;
-          button.addEventListener("click", () => handleOptionSelect(question.id, option.id));
-          optionList.appendChild(button);
-        });
-
-        wrapper.appendChild(optionList);
-        return wrapper;
-      }
-
-      function renderQuestions() {
-        quizContainer.innerHTML = "";
-        questions.forEach((question) => {
-          quizContainer.appendChild(createQuestionBlock(question));
-        });
-      }
-
       function enterPage2() {
         if (state.pageEntered) {
           return;
@@ -1763,20 +1841,25 @@
         });
       }
 
-      async function handleBeginChallenge() {
-        if (!await ensureUserIdentity()) {
-          return;
-        }
-        startP3ChallengeFlow();
-      }
-
       function preloadImages() {
         const imageUrls = [
           "./assets/p1/backgroundimage.png",
           "./assets/p1/unlock.png",
           "./assets/p2/backgroundimage.png",
+          "./assets/p2/Q.png",
+          "./assets/p2/op1.png",
+          "./assets/p2/op1_s.png",
+          "./assets/p2/op2.png",
+          "./assets/p2/op2_s.png",
+          "./assets/p2/op3.png",
+          "./assets/p2/op3_s.png",
+          "./assets/p2/op4.png",
+          "./assets/p2/op4_s.png",
+          "./assets/p2/op5.png",
+          "./assets/p2/op5_s.png",
+          "./assets/p2/Answer_Analysis.png",
           "./assets/p2/pop-up_notification-read.png",
-          "./assets/p2/close.png",
+          "./assets/p2/Continue_to_participate.png",
           "./assets/p2/begin_the_challenge.png",
           "./assets/p3/background_qusetion-image.png",
           "./assets/p3/finished_reading.png",
@@ -1804,13 +1887,6 @@
           "./assets/music_Close.png"
         ];
 
-        questions.forEach((question) => {
-          imageUrls.push(question.title);
-          question.options.forEach((option) => {
-            imageUrls.push(option.defaultSrc, option.selectedSrc);
-          });
-        });
-
         for (let i = 1; i <= P3_SET_COUNT; i += 1) {
           const assets = getP3SetAssets(i);
           imageUrls.push(assets.reading, assets.question);
@@ -1830,13 +1906,13 @@
         enterPage2();
       });
       musicBtn.addEventListener("click", toggleMusic);
-      popupClose.addEventListener("click", hidePopup);
       popupMask.addEventListener("click", (event) => {
         if (event.target === popupMask) {
           hidePopup();
         }
       });
-      popupEnter.addEventListener("click", handleBeginChallenge);
+      p2SubmitBtn.addEventListener("click", handleP2Submit);
+      popupEnter.addEventListener("click", handleP2PopupEnter);
       finishedReadingBtn.addEventListener("click", () => {
         if (state.p3ReadingSeconds > 0) {
           return;
@@ -2038,7 +2114,7 @@
       bgMusic.addEventListener("error", syncMusicIcon);
       window.addEventListener("beforeunload", clearP3Countdown);
 
-      renderQuestions();
+      renderP2Options();
       preloadImages();
       syncMusicIcon();
       syncP5GuidingText();
@@ -2049,7 +2125,7 @@
     var shareTitle = '抽奖送书|全民阅读活动周·阅读挑战';
 		var shareDesc = '抽奖送书|全民阅读活动周·阅读挑战';
 		var shareUrl = window.location.href.split('#')[0];
-		var shareImg = 'https://h5.cyol.com/special/ReadingWeek/index.html/icon.png';
+		var shareImg = 'https://h5.cyol.com/special/ReadingWeek/icon.png';
 
 		shareUrls = encodeURIComponent(shareUrl);
 
