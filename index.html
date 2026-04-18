@@ -761,6 +761,25 @@
       height: auto;
     }
 
+    .popup-mask.result-mode {
+      padding: 4vw;
+      background: rgba(8, 6, 4, 0.78);
+    }
+
+    .popup-mask.result-mode .popup-card {
+      width: 96vw;
+      height: auto;
+    }
+
+    .popup-mask.result-mode .popup-image {
+      width: 100%;
+      height: auto;
+    }
+
+    .popup-mask.result-mode .popup-enter {
+      display: none;
+    }
+
     .popup-close {
       position: absolute;
       top: 19%;
@@ -1431,15 +1450,27 @@
       function showPopup(mode) {
         state.popupVisible = true;
         state.popupMode = mode;
-        popupMask.classList.remove("analysis-mode", "notice-mode");
-        popupMask.classList.add(mode === "notice" ? "notice-mode" : "analysis-mode");
+        popupMask.classList.remove("analysis-mode", "notice-mode", "result-mode");
+        popupEnter.style.display = "";
         if (mode === "notice") {
+          popupMask.classList.add("notice-mode");
           popupImage.src = "./assets/p2/pop-up_notification-read.png";
           popupImage.alt = "挑战提示";
           popupEnterImg.src = "./assets/p2/begin_the_challenge.png";
           popupEnterImg.alt = "开始挑战";
           popupEnter.setAttribute("aria-label", "开始挑战");
-        } else {
+        } else if (mode === "result-correct") {
+          popupMask.classList.add("result-mode");
+          popupImage.src = "./assets/p2/Correct_answer.png";
+          popupImage.alt = "回答正确";
+          popupEnter.style.display = "none";
+        } else if (mode === "result-wrong") {
+          popupMask.classList.add("result-mode");
+          popupImage.src = "./assets/p2/Wrong_answer.png";
+          popupImage.alt = "回答错误";
+          popupEnter.style.display = "none";
+        } else if (mode === "analysis") {
+          popupMask.classList.add("analysis-mode");
           popupImage.src = "./assets/p2/Answer_Analysis.png";
           popupImage.alt = "答案解析";
           popupEnterImg.src = "./assets/p2/Continue_to_participate.png";
@@ -1454,7 +1485,8 @@
         state.popupVisible = false;
         state.popupMode = "";
         popupMask.classList.remove("show");
-        popupMask.classList.remove("analysis-mode", "notice-mode");
+        popupMask.classList.remove("analysis-mode", "notice-mode", "result-mode");
+        popupEnter.style.display = "";
         popupMask.setAttribute("aria-hidden", "true");
       }
 
@@ -1523,22 +1555,22 @@
         syncP2SubmitButtonState();
       }
 
-      async function handleP2Submit() {
+      function handleP2Submit() {
         if (!state.p2SelectedOptions.length) {
           return;
         }
         if (isP2AnswerCorrect()) {
-          if (!await ensureUserIdentity()) {
-            return;
-          }
-          hidePopup();
-          startP3ChallengeFlow();
+          showPopup("result-correct");
           return;
         }
-        showPopup("analysis");
+        showPopup("result-wrong");
       }
 
       async function handleP2PopupEnter() {
+        if (state.popupMode === "result-correct" || state.popupMode === "result-wrong") {
+          showPopup("analysis");
+          return;
+        }
         if (state.popupMode === "analysis") {
           showPopup("notice");
           return;
@@ -1885,6 +1917,8 @@
           "./assets/p2/op5.png",
           "./assets/p2/op5_s.png",
           "./assets/p2/Answer_Analysis.png",
+          "./assets/p2/Correct_answer.png",
+          "./assets/p2/Wrong_answer.png",
           "./assets/p2/pop-up_notification-read.png",
           "./assets/p2/Continue_to_participate.png",
           "./assets/p2/begin_the_challenge.png",
@@ -1933,13 +1967,13 @@
         enterPage2();
       });
       musicBtn.addEventListener("click", toggleMusic);
-      popupMask.addEventListener("click", (event) => {
-        if (event.target === popupMask) {
-          hidePopup();
+      popupMask.addEventListener("click", () => {
+        if (!state.popupVisible) {
+          return;
         }
+        void handleP2PopupEnter();
       });
       p2SubmitBtn.addEventListener("click", handleP2Submit);
-      popupEnter.addEventListener("click", handleP2PopupEnter);
       finishedReadingBtn.addEventListener("click", () => {
         if (state.p3ReadingSeconds > 0) {
           return;
